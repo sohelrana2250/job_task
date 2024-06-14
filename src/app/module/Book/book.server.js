@@ -32,6 +32,9 @@ const deleteMyBooking = async (id, email) => {
   if (isExistMyBooking.paymentstatus) {
     return "payable Booking Can Not be Deleted";
   }
+  if (isExistMyBooking.withoutpayment) {
+    return "That is Applicable Only  SSL Commaz User";
+  }
   if (!isExistMyBooking.paymentstatus) {
     const result = await Books.deleteOne({ _id: id });
     return result;
@@ -39,8 +42,14 @@ const deleteMyBooking = async (id, email) => {
   return "Something went Wrong";
 };
 
+const AllBookigEvent = async () => {
+  const result = await Books.find({});
+  return result;
+};
+
 module.exports = {
   bookingEventIntoDb,
   mybookingIntoDb,
   deleteMyBooking,
+  AllBookigEvent,
 };

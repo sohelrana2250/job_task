@@ -40,7 +40,8 @@ const updateEvenetFromDb = async (id, payload) => {
 };
 const deleteEvenetFromDb = async (id, email) => {
   const isExistUser = await Users.findOne({ email: email }, { role: 1 });
-  if (!isExistUser.role !== "admin") {
+  console.log(id, email);
+  if (isExistUser.role !== "admin") {
     return "Only Admin Can be deleted this Event";
   }
 

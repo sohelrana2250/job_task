@@ -13,6 +13,10 @@ const createOrder = async (payload) => {
     throw new Error("Event not found");
   }
 
+  if (eventData.availableTickets === 0 && eventData.payableTicket === 0) {
+    return "Event Not Booking, Event not Available";
+  }
+
   const availableTickets = eventData.availableTickets - 1;
   const payableTicket = eventData.payableTicket - 1;
 
@@ -180,6 +184,10 @@ const withoutPaymentGetway = async (payload) => {
     { _id: payload.eventId },
     { _id: 1, availableTickets: 1, freeTicket: 1 }
   );
+
+  if (eventData.availableTickets === 0 && eventData.freeTicket === 0) {
+    return "Free Event Not Available";
+  }
   const freeTicket = eventData.freeTicket - 1;
   const availableTickets = eventData.availableTickets - 1;
   // start transaction rollback
@@ -262,10 +270,16 @@ const cancelEventWithoutPayment = async (payload) => {
   }
 };
 
+const AllPayments = async () => {
+  const result = await Payments.find({});
+  return result;
+};
+
 module.exports = {
   createOrder,
   successPayment,
   failedPayment,
   withoutPaymentGetway,
   cancelEventWithoutPayment,
+  AllPayments,
 };

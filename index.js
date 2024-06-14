@@ -2,12 +2,16 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = 3052;
+
 require("dotenv").config();
 const mongoose = require("mongoose");
 const SSLCommerzPayment = require("sslcommerz-lts");
 const {
   createUserIntoDb,
   findUser,
+  findAllUser,
+  ChnageUserStatus,
+  createAdmin,
 } = require("./src/app/module/user/user.server");
 const createUserValidationSchema = require("./src/app/module/user/user.validation");
 const { createToken, verifyToken } = require("./src/app/middlewee/auth");
@@ -27,6 +31,7 @@ const {
   bookingEventIntoDb,
   mybookingIntoDb,
   deleteMyBooking,
+  AllBookigEvent,
 } = require("./src/app/module/Book/book.server");
 const {
   paymentGetWay,
@@ -38,6 +43,7 @@ const {
   failedPayment,
   withoutPaymentGetway,
   cancelEventWithoutPayment,
+  AllPayments,
 } = require("./src/app/module/paymentGetway/payment.server");
 
 async function main() {
@@ -67,13 +73,6 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 // testing purpose
-app.post("/post", async (req, res) => {
-  const payload = req.body;
-  const validation = await createUserValidationSchema.parseAsync(payload);
-  const result = await createUserIntoDb(validation);
-  res.send(result);
-});
-
 app.post("/user", async (req, res) => {
   const user = req.body;
   const token = createToken(user);
@@ -81,14 +80,34 @@ app.post("/user", async (req, res) => {
   const isUserExist = await findUser(email);
   if (isUserExist?._id) {
     return res.send({
-      statu: "success",
+      status: "success",
       message: "Login success",
       token,
     });
   }
+
   const validation = await createUserValidationSchema.parseAsync(user);
   await createUserIntoDb(validation);
   return res.send({ message: "Account Create Successfully", token });
+});
+
+app.get("/alluser", verifyToken, async (req, res) => {
+  const result = await findAllUser();
+  res.send({ message: "Get Successful", data: result });
+});
+
+app.patch("/chnage_status/:id", verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const payload = req.body;
+  const result = await ChnageUserStatus(id, payload);
+  res.send(result);
+});
+
+// create Admin
+app.get("/users/admin", verifyToken, async (req, res) => {
+  const email = req.user;
+  const result = await createAdmin(email);
+  res.send({ isAdmin: result?.role });
 });
 
 app.post("/available_event", verifyToken, async (req, res) => {
@@ -129,7 +148,7 @@ app.patch("/update_event/:id", verifyToken, async (req, res) => {
     data: result,
   });
 });
-app.delete("/delete_event/:id", async (req, res) => {
+app.delete("/delete_event/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const email = req.user;
   const result = await deleteEvenetFromDb(id, email);
@@ -172,6 +191,12 @@ app.delete("/deletemy_booking/:id", verifyToken, async (req, res) => {
     status: true,
     data: result,
   });
+});
+
+//allbooking
+app.get("/allbookig_event", verifyToken, async (req, res) => {
+  const result = await AllBookigEvent();
+  res.send(result);
 });
 
 // payment getway
@@ -221,7 +246,11 @@ app.post("/api/v1/withoutPayment", async (req, res) => {
 app.delete("/api/v1/delete_withoutPayment", async (req, res) => {
   const payload = req.body;
   const result = await cancelEventWithoutPayment(payload);
-  console.log(result);
+
+  res.send(result);
+});
+app.get("/allpayment", verifyToken, async (req, res) => {
+  const result = await AllPayments();
   res.send(result);
 });
 
